@@ -30,6 +30,9 @@ From: mambaorg/micromamba:jammy-cuda-{{CUDA_VERSION}}
     # Install LLaVA dependencies:
     micromamba create --verbose -y -n "${ENV_NAME}" -f environment.yml && rm environment.yml
 
+    # Show Python version:
+    micromamba run -n "${ENV_NAME}" python --version >&2
+
     if [ "${INSTALL_TRAINING_TOOLS:-0}" != 0 ]; then
         micromamba install --verbose -y -n "${ENV_NAME}" nvidia/label/cuda-12.4.1::cuda-nvcc conda-forge::deepspeed conda-forge::ninja
         micromamba install --verbose -y -n "${ENV_NAME}" "${ENV_NAME}" python -m pip install --no-cache-dir flash-attn --no-build-isolation
