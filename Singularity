@@ -56,4 +56,14 @@ From: mambaorg/micromamba:jammy
     export SHELL="/bin/bash"
 
 %runscript
+    if [ "${VERBOSE:-0}" != 0 ]; then
+        if [ -n "${HUGGINGFACE_HUB_CACHE:-}" ]; then
+            echo "INFO: Using HUGGINGFACE_HUB_CACHE=\"${HUGGINGFACE_HUB_CACHE:-}\"" >&2
+            mkdir -p "${HUGGINGFACE_HUB_CACHE}" || { echo "ERROR: Could not create HUGGINGFACE_HUB_CACHE=\"${HUGGINGFACE_HUB_CACHE}\" (exit: $?)"; exit 1; }
+            echo "INFO: HUGGINGFACE_HUB_CACHE=\"${HUGGINGFACE_HUB_CACHE:-}\" (avail: $(df -h --output=avail -h "${HUGGINGFACE_HUB_CACHE}" | tail -n 1 || true)" >&2
+        else
+             echo "INFO: HUGGINGFACE_HUB_CACHE is not set!" >&2
+        fi
+    fi
 	exec micromamba run -n "${ENV_NAME}" "$@"
+
