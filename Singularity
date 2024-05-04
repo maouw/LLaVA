@@ -4,7 +4,6 @@ From: micromamba/micromamba:jammy-cuda-{{CUDA_VERSION}}
 %arguments
     CUDA_VERSION=12.4.1
     CUDA_ARCHITECTURES=sm_86 sm_89
-	LLAVA_REPO=https://github.com/maouw/LLaVA
     ENV_NAME=llava
     INSTALL_TRAINING_TOOLS=0
 
