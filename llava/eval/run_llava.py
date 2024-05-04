@@ -44,7 +44,7 @@ def load_images(image_files):
 
 def eval_model_single(tokenizer, model, image_processor, context_len, query, image_file, args
 ):
-    qs = args.query
+    qs = query
     image_token_se = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN
     if IMAGE_PLACEHOLDER in qs:
         if model.config.mm_use_im_start_end:
@@ -56,8 +56,11 @@ def eval_model_single(tokenizer, model, image_processor, context_len, query, ima
             qs = image_token_se + "\n" + qs
         else:
             qs = DEFAULT_IMAGE_TOKEN + "\n" + qs
-
-    conv = conv_templates[args.conv_mode].copy()
+    
+    conv_mode = args.conv_mode
+    if conv_mode is None or conv_mode not in conv_templates:
+        conv_mode = "default"
+    conv = conv_templates[conv_mode].copy()
     conv.append_message(conv.roles[0], qs)
     conv.append_message(conv.roles[1], None)
     prompt = conv.get_prompt()
@@ -82,8 +85,8 @@ def eval_model_single(tokenizer, model, image_processor, context_len, query, ima
             input_ids,
             images=images_tensor,
             image_sizes=image_sizes,
-            do_sample=True if args.temperature > 0 else False,
-            temperature=args.temperature,
+            do_sample=True if float(args.temperature) > 0 else False,
+            temperature=float(args.temperature),
             top_p=args.top_p,
             num_beams=args.num_beams,
             max_new_tokens=args.max_new_tokens,
@@ -119,28 +122,53 @@ def eval_model_multiple(args):
         args.load_4bit,
         device=args.device,
     )
-
-    if "llama-2" in model_name.lower():
-        conv_mode = "llava_llama_2"
-    elif "mistral" in model_name.lower():
-        conv_mode = "mistral_instruct"
-    elif "v1.6-34b" in model_name.lower():
-        conv_mode = "chatml_direct"
-    elif "v1" in model_name.lower():
-        conv_mode = "llava_v1"
-    elif "mpt" in model_name.lower():
-        conv_mode = "mpt"
+    
+    if args.conv_mode and args.conv_mode in conv_templates:
+        template_name = args.conv_mode
     else:
-        conv_mode = "llava_v0"
-
-    if args.conv_mode is not None and conv_mode != args.conv_mode:
+        if "llava" in model_name.lower():
+            if 'llama-2' in model_name.lower():
+                template_name = "llava_llama_2"
+            elif "mistral" in model_name.lower() or "mixtral" in model_name.lower():
+                if 'orca' in model_name.lower():
+                    template_name = "mistral_orca"
+                elif 'hermes' in model_name.lower():
+                    template_name = "chatml_direct"
+                else:
+                    template_name = "mistral_instruct"
+            elif 'llava-v1.6-34b' in model_name.lower():
+                template_name = "chatml_direct"
+            elif "v1" in model_name.lower():
+                if 'mmtag' in model_name.lower():
+                    template_name = "v1_mmtag"
+                elif 'plain' in model_name.lower() and 'finetune' not in model_name.lower():
+                    template_name = "v1_mmtag"
+                else:
+                    template_name = "llava_v1"
+            elif "mpt" in model_name.lower():
+                template_name = "mpt"
+            else:
+                if 'mmtag' in model_name.lower():
+                    template_name = "v0_mmtag"
+                elif 'plain' in model_name.lower() and 'finetune' not in model_name.lower():
+                    template_name = "v0_mmtag"
+                else:
+                    template_name = "llava_v0"
+        elif "mpt" in model_name:
+            template_name = "mpt_text"
+        elif "llama-2" in model_name:
+            template_name = "llama_2"
+        else:
+            template_name = "vicuna_v1"
+    
+    if args.conv_mode is not None and template_name != args.conv_mode:
         print(
             "[WARNING] the auto inferred conversation mode is {}, while `--conv-mode` is {}, using {}".format(
-                conv_mode, args.conv_mode, args.conv_mode
+                template_name, args.conv_mode, args.conv_mode
             )
         )
     else:
-        args.conv_mode = conv_mode
+        args.conv_mode = template_name
 
     if len(args.image_file) > 1 or len(args.query) > 1:
         args.json = True
@@ -200,7 +228,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--conv-mode",
         type=str,
-        default=None,
+        default="default",
         help="Conversation mode",
         choices=list(conv_templates.keys())
     )
