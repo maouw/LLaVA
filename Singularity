@@ -2,7 +2,7 @@ Bootstrap: docker
 From: mambaorg/micromamba:jammy-cuda-{{CUDA_VERSION}}
 
 %arguments
-    CUDA_VERSION=12.4.1
+    CUDA_VERSION=12.1.1
     CUDA_ARCHITECTURES=sm_86 sm_89
     ENV_NAME=llava
     INSTALL_TRAINING_TOOLS=0
@@ -61,7 +61,7 @@ From: mambaorg/micromamba:jammy-cuda-{{CUDA_VERSION}}
 	# Run the provided command with the micromamba base environment activated:
     eval "$("${MAMBA_EXE}" shell hook --shell=bash)"
 	micromamba activate "${ENV_NAME}"
-    
+
     if [ -n "${HUGGINGFACE_HUB_CACHE:-}" ]; then
         echo "INFO: Using HUGGINGFACE_HUB_CACHE=\"${HUGGINGFACE_HUB_CACHE:-}\"" >&2
     else
