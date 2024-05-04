@@ -56,6 +56,8 @@ From: mambaorg/micromamba:jammy-cuda-{{CUDA_VERSION}}
     export SHELL="/bin/bash"
 
 %runscript
+    #!/bin/bash
+
 	# Run the provided command with the micromamba base environment activated:
     set -eEu
     eval "$("${MAMBA_EXE}" shell hook --shell=bash)"
