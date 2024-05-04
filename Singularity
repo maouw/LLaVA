@@ -39,7 +39,7 @@ From: mambaorg/micromamba:jammy-cuda-{{CUDA_VERSION}}
     micromamba run -n "${ENV_NAME}" python -m pip install --no-deps --no-cache-dir --config-settings="--install-data=$PWD/llava" .
 
     # Copy executables:
-    cp scrpits/hyak-llava-web.sh "${MAMBA_ROOT_PREFIX}/envs/${ENV_NAME}/bin/hyak-llava-web"
+    cp scripts/hyak-llava-web.sh "${MAMBA_ROOT_PREFIX}/envs/${ENV_NAME}/bin/hyak-llava-web"
     cp scripts/llava-run.sh "${MAMBA_ROOT_PREFIX}/envs/${ENV_NAME}/bin/llava-run"
 
 	# Clean up:
