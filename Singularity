@@ -59,11 +59,9 @@ From: mambaorg/micromamba:jammy-cuda-{{CUDA_VERSION}}
     #!/bin/bash
 
 	# Run the provided command with the micromamba base environment activated:
-    set -eEu
     eval "$("${MAMBA_EXE}" shell hook --shell=bash)"
 	micromamba activate "${ENV_NAME}"
-    set +eEu
-
+    
     if [ -n "${HUGGINGFACE_HUB_CACHE:-}" ]; then
         echo "INFO: Using HUGGINGFACE_HUB_CACHE=\"${HUGGINGFACE_HUB_CACHE:-}\"" >&2
     else
