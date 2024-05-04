@@ -24,21 +24,6 @@ from PIL import Image
 from io import BytesIO
 import re
 
-
-def image_parser(args):
-    out = args.image_file.split(args.sep)
-    return out
-
-
-def load_image(image_file):
-    if image_file.startswith("http") or image_file.startswith("https"):
-        response = requests.get(image_file)
-        image = Image.open(BytesIO(response.content)).convert("RGB")
-    else:
-        image = Image.open(image_file).convert("RGB")
-    return image
-
-
 def load_images(image_files):
     return [load_image(image_file) for image_file in image_files]
 
@@ -57,15 +42,13 @@ def eval_model_single(tokenizer, model, image_processor, context_len, query, ima
         else:
             qs = DEFAULT_IMAGE_TOKEN + "\n" + qs
     
-    conv_mode = args.conv_mode
-    if conv_mode is None or conv_mode not in conv_templates:
-        conv_mode = "default"
+
     conv = conv_templates[conv_mode].copy()
     conv.append_message(conv.roles[0], qs)
     conv.append_message(conv.roles[1], None)
     prompt = conv.get_prompt()
-
-    image_files = image_parser(args)
+    
+    image_files = image_file.split(args.sep)
     images = load_images(image_files)
     image_sizes = [x.size for x in images]
     images_tensor = process_images(
