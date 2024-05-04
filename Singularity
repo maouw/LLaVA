@@ -46,7 +46,7 @@ From: mambaorg/micromamba:jammy-cuda-{{CUDA_VERSION}}
 	micromamba run -n "${ENV_NAME}" python -m pip cache purge
 	micromamba clean --all --yes
     cd /opt
-	rm -rf /opt/.setup/* /opt/.setup/.*
+	rm -rf /opt/.setup
 
 %environment
     export ENV_NAME="{{ ENV_NAME }}"
