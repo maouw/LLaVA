@@ -106,8 +106,7 @@ def eval_model_single(tokenizer, model, image_processor, context_len, query, ima
     return outputs
 
 
-def def eval_model_multiple(args):
-(args):
+def eval_model_multiple(args):
     # Model
     disable_torch_init()
 
