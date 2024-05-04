@@ -43,7 +43,7 @@ def eval_model_single(tokenizer, model, image_processor, context_len, query, ima
             qs = DEFAULT_IMAGE_TOKEN + "\n" + qs
     
 
-    conv = conv_templates[conv_mode].copy()
+    conv = conv_templates[args.conv_mode].copy()
     conv.append_message(conv.roles[0], qs)
     conv.append_message(conv.roles[1], None)
     prompt = conv.get_prompt()
