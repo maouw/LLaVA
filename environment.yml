@@ -1,0 +1,35 @@
+name: llava
+
+channels:
+    - pytorch
+    - nvidia
+    - conda-forge
+    - anaconda
+
+dependencies:
+  - conda-forge::python~=3.11
+  - pytorch::pytorch-cuda=12.4
+  - pytorch::torchvision
+  - pytorch::pytorch
+  - numpy
+  - scikit-learn>=1.2.2
+  - conda-forge::accelerate>=0.21.0
+  - conda-forge::bitsandbytes
+  - conda-forge::einops>=0.6.1
+  - conda-forge::fastapi
+  - conda-forge::gradio>=4.16.0
+  - conda-forge::gradio-client>=0.8.1
+  - conda-forge::httpx>=0.24.0
+  - conda-forge::markdown2
+  - conda-forge::peft
+  - conda-forge::pip
+  - conda-forge::pydantic
+  - conda-forge::requests
+  - conda-forge::sentencepiece>=0.1.99
+  - conda-forge::shortuuid
+  - conda-forge::timm>=0.6.13
+  - tokenizers>=0.15.1
+  - transformers>=4.37.2
+  - conda-forge::uvicorn
+  - pip:
+      - einops-exts>=0.0.4
