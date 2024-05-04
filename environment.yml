@@ -1,16 +1,17 @@
 name: llava
 
 channels:
-    - pytorch
-    - nvidia
-    - conda-forge
-    - anaconda
+  - pytorch
+  - nvidia
+  - anaconda
+  - conda-forge
+  - defaults
 
 dependencies:
   - conda-forge::python=3.11
-  - pytorch::pytorch-cuda=12.4
-  - pytorch::torchvision
-  - pytorch::pytorch
+  - pytorch-cuda=12.4
+  - pytorch>=2.3.0=py3.11_cuda12.1_cudnn8.9.2_0
+  - torchvision
   - numpy
   - scikit-learn>=1.2.2
   - conda-forge::accelerate>=0.21.0
