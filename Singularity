@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: micromamba/micromamba:jammy-cuda-{{CUDA_VERSION}}
+From: mambaorg/micromamba:jammy-cuda-{{CUDA_VERSION}}
 
 %arguments
     CUDA_VERSION=12.4.1
