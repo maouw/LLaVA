@@ -9,22 +9,19 @@ From: micromamba/micromamba:jammy-cuda-{{CUDA_VERSION}}
     INSTALL_TRAINING_TOOLS=0
 
 %setup
-    mkdir -p "${APPTAINER_ROOTFS}/setup"
+    mkdir -p "${APPTAINER_ROOTFS}/.setup"
 
 %files
-    ./ /opt/setup
+    ./ /opt/.setup
 
 %post
     set -exu
     export DEBIAN_FRONTEND=noninteractive
     export ENV_NAME="{{ ENV_NAME }}"
-    LLAVA_URL="{{ LLAVA_URL }}"
-    USE_CUDA="{{ USE_CUDA }}"
     INSTALL_TRAINING_TOOLS="{{ INSTALL_TRAINING_TOOLS }}"
     CUDA_VERSION="{{ CUDA_VERSION }}"
     CUDA_ARCHITECTURES="{{ CUDA_ARCHITECTURES }}"
     export TORCH_ARCH_CUDA_LIST="${CUDA_ARCHITECTURES}"
-    export MAMBA_ROOT_PREFIX="/opt/conda"
     export CI=1
 
     cd /opt/.setup
@@ -35,15 +32,9 @@ From: micromamba/micromamba:jammy-cuda-{{CUDA_VERSION}}
     micromamba create --verbose -y -n "${ENV_NAME}" -f environment.yml && rm environment.yml
 
     if [ "${INSTALL_TRAINING_TOOLS:-0}" != 0 ]; then
-        export TORCH_CUDA_ARCH_LIST="${CUDA_ARCHITECTURES}"
-        micromamba install --verbose -y -n "${ENV_NAME}" nvidia/label/cuda-12.4.1::cuda-nvcc anaconda::cudnn conda-forge::deepspeed conda-forge::ninja
+        micromamba install --verbose -y -n "${ENV_NAME}" nvidia/label/cuda-12.4.1::cuda-nvcc conda-forge::deepspeed conda-forge::ninja
         micromamba install --verbose -y -n "${ENV_NAME}" "${ENV_NAME}" python -m pip install --no-cache-dir flash-attn --no-build-isolation
     fi
-
-    # Download and install LLaVA:
-    mkdir -p /opt/setup/llava && cd /opt/setup/llava
-    curl -fsSL "${LLAVA_URL}" -o llava.tar.gz
-    tar -xzf llava.tar.gz --strip-components=1
 
     # Install LLaVA:
     micromamba run -n "${ENV_NAME}" python -m pip install --no-deps --no-cache-dir --config-settings="--install-data=$PWD/llava" .
@@ -56,12 +47,10 @@ From: micromamba/micromamba:jammy-cuda-{{CUDA_VERSION}}
 	micromamba run -n "${ENV_NAME}" python -m pip cache purge
 	micromamba clean --all --yes
     cd /opt
-	rm -rf /opt/.setup/* /opt/setup/.*
+	rm -rf /opt/.setup/* /opt/.setup/.*
 
 %environment
     export ENV_NAME="{{ ENV_NAME }}"
-    export MAMBA_ROOT_PREFIX=/opt/conda
-	export PATH="/opt/local/bin:${PATH}"
     export SHELL="/bin/bash"
 
 %runscript
