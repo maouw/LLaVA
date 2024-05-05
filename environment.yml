@@ -24,6 +24,7 @@ dependencies:
   - conda-forge::markdown2
   - conda-forge::peft
   - conda-forge::pip
+  - conda-forge::protobuf
   - conda-forge::pydantic
   - conda-forge::requests
   - conda-forge::sentencepiece>=0.1.99
