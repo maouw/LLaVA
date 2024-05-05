@@ -5,6 +5,6 @@ from .model import LlavaLlamaForCausalLM
 #oad.py:1132: FutureWarning: `resume_download` is deprecated and will be remov
 #ed in version 1.0.0. Downloads always resume when possible. If you want to fo
 #rce a new download, use `force_download=True`.      
-import warnings
-warnings.simplefilter(action='ignore', module="huggingface_hub", category=FutureWarning)
+import warnings               
+warnings.filterwarnings(action='ignore', module="huggingface_hub.*", category=FutureWarning)
 
