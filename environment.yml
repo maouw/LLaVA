@@ -9,8 +9,8 @@ channels:
 
 dependencies:
   - conda-forge::python=3.11
-  - pytorch-cuda=12.1
-  - pytorch>=2.3.0=py3.11_cuda12.1_cudnn8.9.2_0
+  - pytorch-cuda=11.7
+  - pytorch>=2.3.0=py3.11_cuda11.7_cudnn8.9.2_0
   - torchvision
   - numpy
   - scikit-learn>=1.2.2
@@ -31,7 +31,7 @@ dependencies:
   - conda-forge::shortuuid
   - conda-forge::timm>=0.6.13
   - tokenizers>=0.15.1
-  - transformers>=4.37.2,<4.38.0
+  - transformers=4.31.0
   - conda-forge::uvicorn
   - pip:
       - einops-exts>=0.0.4

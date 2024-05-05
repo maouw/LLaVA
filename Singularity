@@ -2,7 +2,7 @@ Bootstrap: docker
 From: mambaorg/micromamba:jammy
 
 %arguments
-    CUDA_VERSION=12.1.1
+    CUDA_VERSION=11.7
     CUDA_ARCHITECTURES=sm_86 sm_89
     ENV_NAME=llava
     INSTALL_TRAINING_TOOLS=0
