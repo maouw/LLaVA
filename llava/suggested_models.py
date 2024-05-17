@@ -1,0 +1,1 @@
+SUGGESTED_MODELS = ['liuhaotian/llava-v1.6-vicuna-7b', 'liuhaotian/llava-v1.6-vicuna-13b', 'liuhaotian/llava-v1.6-mistral-7b', 'liuhaotian/llava-v1.6-34b', 'liuhaotian/llava-v1.5-7b', 'liuhaotian/llava-v1.5-13b', 'liuhaotian/llava-v1.5-7b-lora', 'liuhaotian/llava-v1.5-13b-lora']

@@ -1,14 +1,11 @@
 FROM build-llava as build-llava-training
-COPY environment-training.yaml /opt/build/llava/
-ARG MAMBA_DOCKERFILE_ACTIVATE=1
+COPY environment-training.yaml /opt/build/llava
 SHELL ["/bin/bash", "-eEx", "-o", "pipefail", "-c"]
 RUN <<-EOF
 
     export CI=1
-    if [ "${INSTALL_TRAINING_TOOLS:-0}" != 0 ]; then
-        micromamba install -v -y -n "${ENV_NAME}" -f environment-training.yaml
-        micromamba clean -y --all
-    fi
+    micromamba install -v -y -n "${ENV_NAME}" -f /opt/build/llava/environment-training.yaml
+    micromamba run -n "${ENV_NAME}" python -m pip cache purge
+    micromamba clean -y --all
 
 EOF
-

@@ -24,14 +24,14 @@ dependencies:
   - markdown2
   - peft
   - pip
-  - protobuf
   - pydantic
   - requests
   - sentencepiece>=0.1.99
   - shortuuid
   - timm>=0.6.13
   - tokenizers>=0.15.1
-  - transformers=4.31.0
+  - transformers=4.37.2
   - uvicorn
+  - protobuf
   - pip:
       - einops-exts>=0.0.4

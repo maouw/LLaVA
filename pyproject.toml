@@ -38,3 +38,7 @@ llava = ["serve/examples/*.jpg"]
 
 [tool.wheel]
 exclude = ["assets*", "benchmark*", "docs", "dist*", "playground*", "scripts*", "tests*"]
+
+
+[project.scripts]
+llava-run = "llava.eval.llava_run:main"
