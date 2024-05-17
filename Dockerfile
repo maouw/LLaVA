@@ -30,16 +30,13 @@ RUN <<-EOF
     micromamba run -n "${ENV_NAME}" python -m pip cache purge
     micromamba clean -y -all
 
-    cp scripts/hyak-llava-web /usr/local/bin/hyak-llava-web
-    cp _entrypoint.sh /usr/local/bin/_entrypoint.sh
-
 EOF
 
 # Script to show web server launch
-COPY --chmod=755 scripts/hyak-llava-web /usr/local/bin/hyak-llava-web
+COPY --chmod=755 scripts/hyak-llava-web.sh /usr/local/bin/hyak-llava-web
 
 # Script which launches commands passed to "docker run"
-COPY _entrypoint.sh /usr/local/bin/_entrypoint.sh
+COPY --chmod=755 _entrypoint.sh /usr/local/bin/_entrypoint.sh
 
 WORKDIR /data
 ENV SHELL=/bin/bash
