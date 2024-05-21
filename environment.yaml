@@ -34,5 +34,6 @@ dependencies:
   - transformers~=4.37.2
   - uvicorn~=0.29.0
   - protobuf~=4.25.3
+  - tqdm~=4.65.0
   - pip:
       - einops-exts~=0.0.4
