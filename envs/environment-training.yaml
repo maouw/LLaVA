@@ -3,4 +3,3 @@ dependencies:
   - nvidia::cuda-compiler
   - ninja
   - conda-forge::deepspeed=0.14.0=cuda120py310hcb41016_200
-  - conda-forge::deepspeedcuda118py312h732232a_200
