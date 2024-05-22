@@ -9,3 +9,4 @@ import sys
 if not sys.warnoptions:
     import warnings
     warnings.filterwarnings(action='ignore', module="huggingface_hub.*", category=FutureWarning)
+    warnings.filterwarnings(action='ignore', module="torch.*", category=UserWarning, message=".*which is a no-op.*")

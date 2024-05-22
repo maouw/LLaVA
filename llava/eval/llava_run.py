@@ -1,5 +1,6 @@
 import argparse
 import subprocess
+import sys
 import warnings
 import json
 import shutil
@@ -28,16 +29,9 @@ import re
 import os
 import tqdm
 
-from llava.utils import build_logger
+import logging
 
-
-logger = build_logger("llava_run", "llava_run.log")
-
-logger.info("Importing module 'torch' -- this may take some time...")
-import torch
-
-logger.info("Done importing module 'torch'.")
-logger.info("Importing other modules...")
+logging.basicConfig(level=logging.INFO)
 
 
 def get_usable_cores():
@@ -73,15 +67,12 @@ def load_image(location, timeout=90):
 
 def load_images(locations, max_workers=None):
     # We can use a with statement to ensure threads are cleaned up promptly
-    return tqdm_parallel_map(load_image, *locations)
+    return list(tqdm_parallel_map(load_image, *locations))
 
 
 def detect_conv_mode(model_name, conv_mode=None):
     if conv_mode not in conv_templates:
         conv_mode = None
-        logger.warn(
-            f"Conversation mode {conv_mode} not found in templates. Will attempt to infer from model name."
-        )
     if not conv_mode:
         model_name = model_name or ""
         if "llava" in model_name.lower():
@@ -161,6 +152,7 @@ class LlavaPredictor:
         self.image_aspect_ratio = image_aspect_ratio
         self.use_flash_attn = False
         self.debug = debug
+        self.model_name = get_model_name_from_path(model_path=self.model_path)
 
         if not self.conv_mode:
             conv_mode = detect_conv_mode(self.model_name, self.conv_mode)
@@ -168,8 +160,7 @@ class LlavaPredictor:
         # Model
         disable_torch_init()
 
-        self.model_name = get_model_name_from_path(self.model_path)
-        logger.info(f"Loading model {self.model_name}...")
+        logging.info(f"Loading model {self.model_name}...")
         self.tokenizer, self.model, self.image_processor, self.context_len = (
             load_pretrained_model(
                 model_path=self.model_path,
@@ -182,7 +173,7 @@ class LlavaPredictor:
                 **kwargs,
             )
         )
-        logger.info(f"Done loading model {self.model_name}")
+        logging.info(f"Done loading model {self.model_name}")
 
     def predict1(self, query, images):
         qs = query
@@ -243,29 +234,40 @@ class LlavaPredictor:
                 yield dict(image=image_location, query=query, outputs=outputs)
 
 
-def get_arg_parser():
+def main():
+    parser = argparse.ArgumentParser()
     suggested_model_list = []
     try:
         from llava.suggested_models import SUGGESTED_MODELS
 
         suggested_model_list += SUGGESTED_MODELS
     except (ModuleNotFoundError, ImportError, TypeError):
-        suggested_model_list += ["liuhaotian/llava-v1.5-7b"]
+        suggested_model_list += ["liuhaotian/llava-v1.6-mistral-7b"]
 
     model_path_help_text = "Model path"
     if suggested_model_list:
         suggested_model_text = "\t\n".join(suggested_model_list + [")"])
         model_path_help_text += " (e.g. " + suggested_model_text
-
+        
+        
+        
     parser = argparse.ArgumentParser()
+
+
+    parser.add_argument("--list-models", action="store_true", help="List known models")
+
+    parser.add_argument(
+        "--list-conv-modes", action="store_true", help="List known conversation modes"
+    )
+
     parser.add_argument(
         "--model-path",
         type=str,
         metavar="PATH",
         default="liuhaotian/llava-v1.5-7b",
-        help=model_path_help_text,
+        help="Model path (e.g., liuhaotian/llava-v1.5-7b)"
     )
-
+    
     parser.add_argument(
         "--model-base",
         type=str,
@@ -278,14 +280,12 @@ def get_arg_parser():
         "--image-file",
         metavar="IMAGE",
         type=str,
-        required=True,
         action="store",
         nargs="+",
         help="Path or URL to image (provide multiple to process in batch; use --sep delimiter within paths to stack image inputs)",
     )
-
-    query_mode_group = parser.add_mutually_exclusive_group(required=True)
-    query_mode_group.add_argument(
+    
+    parser.add_argument(
         "--query",
         type=str,
         metavar="QUERY",
@@ -293,7 +293,8 @@ def get_arg_parser():
         nargs="+",
         help="Query (can be specified multiple times, e.g. --query a --query b)",
     )
-    query_mode_group.add_argument(
+    
+    parser.add_argument(
         "--chat", action="store_true", help="Use chat instead of query"
     )
 
@@ -302,9 +303,10 @@ def get_arg_parser():
     parser.add_argument(
         "--conv-mode",
         type=str,
-        default=None,
+        default="default",
         help="Conversation mode",
         choices=list(conv_templates.keys()),
+        metavar="e.g., default,v0,v1,vicuna_v1,llama_2...",
     )
     parser.add_argument(
         "--sep",
@@ -360,18 +362,25 @@ def get_arg_parser():
     parser.add_argument(
         "--use-flash-attn", action="store_true", help="Use flash attention"
     )
-    return parser
 
-
-def main():
-    parser = argparse.ArgumentParser()
     args = parser.parse_args()
+    if args.list_models:
+        print("Known models:", file=sys.stderr)
+        for model in suggested_model_list:
+            print(model)
+        sys.exit(0)
+
+    if args.list_conv_modes:
+        print("Known conversation modes:", file=sys.stderr)
+        for mode in conv_templates:
+            print(mode)
+        sys.exit(0)
+
     if args.chat and len(args.image) > 1:
         raise ValueError("Batch processing of multiple images not allowed in chat mode")
     if args.chat and args.json:
         raise ValueError("JSON output not available in chat mode")
-
-    args = parser.parse_args()
+    
     if args.hf_cache_dir:
         os.environ["HUGGINGFACE_HUB_CACHE"] = args.hf_cache_dir
     if not (args.chat or args.query):
@@ -385,10 +394,12 @@ def main():
     nvidia_smi_detected = False
     try:
         subprocess.check_output(shutil.which("nvidia-smi"))
-        logger.info("nvidia-smi detected a GPU")
+        logging.info("nvidia-smi detected a GPU")
         nvidia_smi_detected = True
+        if not args.device:
+            args.device = "cuda"
     except Exception:  # this command not being found can raise quite a few different errors depending on the configuration
-        logger.info("nvidia-smi did not detect a GPU")
+        logging.info("nvidia-smi did not detect a GPU")
 
     if args.device == "cuda" and not nvidia_smi_detected:
         warnings.warn(
@@ -397,7 +408,7 @@ def main():
         from torch.cuda import is_available as cuda_is_available
 
         if cuda_is_available():
-            logger.info("Found CUDA device successfully. Continuing.")
+            logging.info("Found CUDA device successfully. Continuing.")
         else:
             raise ValueError(
                 "--device cuda is specified, but no CUDA available. Try --device cpu."
@@ -427,6 +438,12 @@ def main():
         cli_args_dict.setdefault("image_aspect_ratio", "pad")
         cli.main(argparse.Namespace(**cli_args_dict))
     else:
+        logging.info("Importing module 'torch' -- this may take some time...")
+        import torch
+
+        logging.info("Done importing module 'torch'.")
+        logging.info("Importing other modules...")
+
         predictor = LlavaPredictor(
             model_path=args.model_path,
             model_base=args.model_base,
@@ -441,14 +458,14 @@ def main():
             use_flash_attn=False,
             debug=False,
         )
-
-        image_locations = [x.strip() for x in re.split(args.sep, args.image_file)]
-
-        for pred in predictor.predict(args.query, image_locations=image_locations):
-            if args.json:
-                print(json.dumps(pred))
-            else:
-                print(pred["outputs"])
+        
+        for i in args.image_file:
+            for q in args.query:
+                for pred in predictor.predict(q, image_locations=i):
+                    if args.json:
+                        print(json.dumps(pred))
+                    else:
+                        print(pred)
 
 
 if __name__ == "__main__":

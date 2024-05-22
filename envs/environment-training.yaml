@@ -1,7 +1,3 @@
-# Use this environment file if your computer has a nvidia GPU and runs Windows or Linux.
-
-name: llava-training
-
 channels:
     - nvidia
     - conda-forge

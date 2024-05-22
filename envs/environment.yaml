@@ -1,0 +1,39 @@
+name: llava
+
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - anaconda
+  - defaults
+
+dependencies:
+  - python~=3.10
+  - pytorch::pytorch-cuda~=12.1
+  - pytorch::pytorch=*=*cuda12.1* 
+  - pytorch::torchvision~=0.18.0
+  - numpy>=1.24.0
+  - scikit-learn~=1.2.2
+  - accelerate~=0.21.0
+  - conda-forge::bitsandbytes==0.42.0
+  - einops~=0.8.0
+  - fastapi~=0.110.3
+  - gradio~=4.16.0
+  - gradio-client~=0.8.1
+  - httpx~=0.24.0
+  - markdown2~=2.4.13
+  - peft~=0.10.0
+  - pip~=24.0
+  - pydantic~=2.7.1
+  - pygments~=2.15.1
+  - requests~=2.31.0
+  - sentencepiece~=0.1.99
+  - shortuuid~=1.0.13
+  - timm~=0.6.13
+  - tokenizers~=0.15.1
+  - transformers~=4.37.2
+  - uvicorn~=0.29.0
+  - protobuf~=4.25.3
+  - tqdm~=4.65.0
+  - pip:
+      - einops-exts~=0.0.4
