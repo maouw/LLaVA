@@ -61,10 +61,29 @@ EOF
 # Final image
 FROM build-llava-prereqs as build-llava
 WORKDIR /opt/build/llava
-COPY ./ .
+
+COPY _entrypoint.sh pyproject.toml README.md .
+
+COPY scripts ./scripts
+
+# Script to show web server launch
+COPY --chmod=755 scripts/hyak-llava-web.sh /usr/local/bin/hyak-llava-web
+
+# Script which launches commands passed to "docker run"
+COPY --chmod=755 _entrypoint.sh /usr/local/bin/_entrypoint.sh
+
+COPY docs ./docs
+COPY envs ./envs
+COPY images ./images
+COPY playground ./playground
+
+COPY llava ./llava
+COPY pyproject.toml .
 SHELL ["/bin/bash", "-eEx", "-o", "pipefail", "-c"]
 RUN --mount=type=cache,sharing=locked,target=/opt/conda/pkgs \
 <<-EOF
+ 
+    ls -1
 
     # Install LLaVA:
     micromamba run -n base -e TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST}" python -m pip install --no-deps --no-cache-dir --config-settings="--install-data=$PWD/llava" .
@@ -73,13 +92,6 @@ RUN --mount=type=cache,sharing=locked,target=/opt/conda/pkgs \
     micromamba run -n base python -m pip cache purge
 
 EOF
-
-# Script to show web server launch
-COPY --chmod=755 scripts/hyak-llava-web.sh /usr/local/bin/hyak-llava-web
-
-# Script which launches commands passed to "docker run"
-COPY --chmod=755 _entrypoint.sh /usr/local/bin/_entrypoint.sh
-
 
 ENV SHELL=/bin/bash
 ENTRYPOINT ["/usr/local/bin/_entrypoint.sh"]

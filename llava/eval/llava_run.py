@@ -33,7 +33,11 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
+logging.info("Importing module 'torch' -- this may take some time...")
+import torch
 
+logging.info("Done importing module 'torch'.")
+logging.info("Importing other modules...")
 def get_usable_cores():
     return (
         os.cpu_count()
@@ -42,32 +46,21 @@ def get_usable_cores():
     )
 
 
-def tqdm_parallel_map(fn, *iterables, executor=None):
-    """use tqdm to show progress"""
-    executor = executor or concurrent.futures.ThreadPoolExecutor(
-        max_workers=get_usable_cores()
-    )
-    futures_list = []
-    for iterable in iterables:
-        futures_list += [executor.submit(fn, i) for i in iterable]
-    for f in tqdm.tqdm(
-        concurrent.futures.as_completed(futures_list), total=len(futures_list)
-    ):
-        yield f.result()
-
-
-def load_image(location, timeout=90):
-    if location.startswith("http") or location.startswith("https"):
-        response = requests.get(location, timeout=timeout)
+def load_image(image_file):
+    if image_file.startswith("http") or image_file.startswith("https"):
+        response = requests.get(image_file)
         image = Image.open(BytesIO(response.content)).convert("RGB")
     else:
-        image = Image.open(location).convert("RGB")
+        image = Image.open(image_file).convert("RGB")
     return image
 
 
-def load_images(locations, max_workers=None):
-    # We can use a with statement to ensure threads are cleaned up promptly
-    return list(tqdm_parallel_map(load_image, *locations))
+def load_images(image_files):
+    out = []
+    for image_file in image_files:
+        image = load_image(image_file)
+        out.append(image)
+    return out
 
 
 def detect_conv_mode(model_name, conv_mode=None):
@@ -175,7 +168,7 @@ class LlavaPredictor:
         )
         logging.info(f"Done loading model {self.model_name}")
 
-    def predict1(self, query, images):
+    def predict1(self, query, image_file, sep=","):
         qs = query
         image_token_se = (
             DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN
@@ -196,6 +189,8 @@ class LlavaPredictor:
         conv.append_message(conv.roles[1], None)
         prompt = conv.get_prompt()
 
+        image_files = image_file.split(sep)
+        images = load_images(image_files)
         image_sizes = [x.size for x in images]
         images_tensor = process_images(
             images, self.image_processor, self.model.config
@@ -226,13 +221,11 @@ class LlavaPredictor:
         ].strip()
         return outputs
 
-    def predict(self, queries, image_locations):
-        images = load_images(image_locations)
-        for image, image_location in zip(images, image_locations):
+    def predict(self, queries, image_files):
+        for image_file in image_files:
             for query in queries:
-                outputs = self.predict1(query, images=image)
-                yield dict(image=image_location, query=query, outputs=outputs)
-
+                output = self.predict1(query, image_file=image_file)
+                yield dict(image=image_file, query=query, output=output)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -405,9 +398,8 @@ def main():
         warnings.warn(
             "--device is set to 'cuda' but nvidia-smi dif not detect a GPU. Please wait while checking with torch.cuda.is_available()..."
         )
-        from torch.cuda import is_available as cuda_is_available
 
-        if cuda_is_available():
+        if torch.cuda.cuda_is_available():
             logging.info("Found CUDA device successfully. Continuing.")
         else:
             raise ValueError(
@@ -438,11 +430,7 @@ def main():
         cli_args_dict.setdefault("image_aspect_ratio", "pad")
         cli.main(argparse.Namespace(**cli_args_dict))
     else:
-        logging.info("Importing module 'torch' -- this may take some time...")
-        import torch
 
-        logging.info("Done importing module 'torch'.")
-        logging.info("Importing other modules...")
 
         predictor = LlavaPredictor(
             model_path=args.model_path,
@@ -459,13 +447,12 @@ def main():
             debug=False,
         )
         
-        for i in args.image_file:
-            for q in args.query:
-                for pred in predictor.predict(q, image_locations=i):
-                    if args.json:
-                        print(json.dumps(pred))
-                    else:
-                        print(pred)
+
+    for pred in predictor.predict(args.query, image_files=args.image_file):
+        if args.json:
+            print(json.dumps(pred))
+        else:
+            print(pred)
 
 
 if __name__ == "__main__":
